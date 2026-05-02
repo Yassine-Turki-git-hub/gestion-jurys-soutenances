@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 @Entity
 @Table(name = "enseignants")
 @Data
@@ -13,14 +12,14 @@ import lombok.NoArgsConstructor;
 public class Enseignant {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long id; 
 
     private String nom;
     private String prenom;
-    
+
     @Column(unique = true)
     private String email;
-    
-    private String grade; // Ex: PES, Maitre de Conférences
-    private String departement; // Ex: Informatique, Mathématiques
+    private String password;
+    private String grade;
+    private String departement;
 }
