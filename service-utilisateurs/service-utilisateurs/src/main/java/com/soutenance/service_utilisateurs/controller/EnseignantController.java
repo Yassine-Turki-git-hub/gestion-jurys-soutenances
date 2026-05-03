@@ -27,6 +27,11 @@ public class EnseignantController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/{id}/exists")
+    public ResponseEntity<Boolean> exists(@PathVariable Long id) {
+        return ResponseEntity.ok(enseignantRepository.existsById(id));
+    }
+    
     @PostMapping
     public Enseignant saveEnseignant(@RequestBody Enseignant enseignant) {
         return enseignantRepository.save(enseignant);
