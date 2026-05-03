@@ -27,6 +27,11 @@ public class EtudiantController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/{id}/exists")
+    public ResponseEntity<Boolean> exists(@PathVariable Long id) {
+        return ResponseEntity.ok(etudiantRepository.existsById(id));
+    }
+    
     @PostMapping
     public Etudiant createEtudiant(@RequestBody Etudiant etudiant) {
         return etudiantRepository.save(etudiant);
