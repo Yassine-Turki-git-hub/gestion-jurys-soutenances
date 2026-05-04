@@ -13,6 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,6 +31,7 @@ public class SoutenanceService {
 
     @Transactional
     public SoutenanceDTO creer(SoutenanceDTO dto) {
+
         // 1. Vérifier que l'étudiant existe (via Feign → service-utilisateurs)
         Boolean etudiantExiste = utilisateurClient.etudiantExists(Long.parseLong(dto.getEtudiantId()));
         if (!Boolean.TRUE.equals(etudiantExiste)) {
@@ -41,21 +44,12 @@ public class SoutenanceService {
             throw new ResourceNotFoundException("Encadrant introuvable : " + dto.getEncadrantId());
         }
 
-        // 3. Vérifier pas de conflit horaire pour l'étudiant
-        if (soutenanceRepository.existsByEtudiantIdAndDate(dto.getEtudiantId(), dto.getDate())) {
-            throw new ConflitHoraireException(
-                "L'étudiant " + dto.getEtudiantId() + " a déjà une soutenance à cette date."
-            );
-        }
+        // 3 & 4. Vérifier les conflits horaires (création : excludeId = "none")
+        verifierConflits(dto.getEtudiantId(), dto.getEncadrantId(), dto.getSalleId(),
+                         dto.getDate(), dto.getHeureDebut(), dto.getHeureFin(),
+                         /* excludeId = */ "none");
 
-        // 4. Vérifier pas de conflit horaire pour l'encadrant
-        if (soutenanceRepository.existsByEncadrantIdAndDate(dto.getEncadrantId(), dto.getDate())) {
-            throw new ConflitHoraireException(
-                "L'encadrant " + dto.getEncadrantId() + " a déjà une soutenance à cette date."
-            );
-        }
-
-        // 5. Vérifier disponibilité salle et créneau si fournis
+        // 5. Vérifier disponibilité salle et créneau via Feign (inchangé)
         if (dto.getSalleId() != null && !dto.getSalleId().isBlank()) {
             Boolean salleDisponible = planificationClient.salleDisponible(dto.getSalleId());
             if (!Boolean.TRUE.equals(salleDisponible)) {
@@ -103,6 +97,13 @@ public class SoutenanceService {
     @Transactional
     public SoutenanceDTO modifier(String id, SoutenanceDTO dto) {
         Soutenance existing = findOrThrow(id);
+
+        // Re-check conflicts, but exclude the soutenance being edited
+        // so it doesn't conflict with itself.
+        verifierConflits(dto.getEtudiantId(), dto.getEncadrantId(), dto.getSalleId(),
+                         dto.getDate(), dto.getHeureDebut(), dto.getHeureFin(),
+                         /* excludeId = */ id);
+
         existing.setTitre(dto.getTitre());
         existing.setDate(dto.getDate());
         existing.setHeureDebut(dto.getHeureDebut());
@@ -147,6 +148,47 @@ public class SoutenanceService {
     public void supprimer(String id) {
         findOrThrow(id);
         soutenanceRepository.deleteById(id);
+    }
+
+    // ── PRIVATE: CONFLICT VALIDATION ──────────────────────────────────────────
+
+    /**
+     * Central time-overlap check used by both creer() and modifier().
+     *
+     * Overlap condition: newDebut < existingFin  AND  newFin > existingDebut
+     *
+     * @param excludeId  the ID of the soutenance to ignore (pass "none" on creation,
+     *                   pass the real ID on update so a record doesn't conflict with itself).
+     */
+    private void verifierConflits(String etudiantId, String encadrantId, String salleId,
+                                  LocalDate date, LocalTime heureDebut, LocalTime heureFin,
+                                  String excludeId) {
+
+        if (soutenanceRepository.existsConflitEtudiant(etudiantId, date, heureDebut, heureFin, excludeId)) {
+            throw new ConflitHoraireException(
+                "L'étudiant " + etudiantId
+                + " a déjà une soutenance qui chevauche le créneau "
+                + heureDebut + "–" + heureFin + " le " + date + "."
+            );
+        }
+
+        if (soutenanceRepository.existsConflitEncadrant(encadrantId, date, heureDebut, heureFin, excludeId)) {
+            throw new ConflitHoraireException(
+                "L'encadrant " + encadrantId
+                + " a déjà une soutenance qui chevauche le créneau "
+                + heureDebut + "–" + heureFin + " le " + date + "."
+            );
+        }
+
+        if (salleId != null && !salleId.isBlank()) {
+            if (soutenanceRepository.existsConflitSalle(salleId, date, heureDebut, heureFin, excludeId)) {
+                throw new ConflitHoraireException(
+                    "La salle " + salleId
+                    + " est déjà occupée sur le créneau "
+                    + heureDebut + "–" + heureFin + " le " + date + "."
+                );
+            }
+        }
     }
 
     // ── HELPERS ───────────────────────────────────────────────────────────────
