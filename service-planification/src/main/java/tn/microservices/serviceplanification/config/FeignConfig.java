@@ -3,6 +3,10 @@ package tn.microservices.serviceplanification.config;
 import feign.RequestInterceptor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @Configuration
 public class FeignConfig {
@@ -11,10 +15,18 @@ public class FeignConfig {
     public RequestInterceptor requestInterceptor() {
         return requestTemplate -> {
 
-            // 🔥 Hardcoded token (for now)
-            String token = "Bearer YOUR_VALID_JWT_HERE";
+            ServletRequestAttributes attributes =
+                    (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
 
-            requestTemplate.header("Authorization", token);
+            if (attributes != null) {
+                HttpServletRequest request = attributes.getRequest();
+
+                String authHeader = request.getHeader("Authorization");
+
+                if (authHeader != null && !authHeader.isEmpty()) {
+                    requestTemplate.header("Authorization", authHeader);
+                }
+            }
         };
     }
 }
