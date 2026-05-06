@@ -21,6 +21,11 @@ public class JuryController {
         return ResponseEntity.status(HttpStatus.CREATED).body(juryService.affecterMembre(request));
     }
 
+    @GetMapping
+    public ResponseEntity<List<JuryDTO.Response>> getAllMembres() {
+        return ResponseEntity.ok(juryService.getAllMembres());
+    }
+
     @GetMapping("/{soutenanceId}")
     public ResponseEntity<List<JuryDTO.Response>> getMembres(@PathVariable String soutenanceId) {
         return ResponseEntity.ok(juryService.getMembresParSoutenance(soutenanceId));
@@ -30,5 +35,13 @@ public class JuryController {
     public ResponseEntity<Void> retirer(@PathVariable String id) {
         juryService.retirerMembre(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/auto/{soutenanceId}")
+    public ResponseEntity<List<JuryDTO.Response>> autoAffecter(
+            @PathVariable String soutenanceId,
+            @RequestParam String encadrantId) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(juryService.autoAffecterJury(soutenanceId, encadrantId));
     }
 }

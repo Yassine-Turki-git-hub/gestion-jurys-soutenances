@@ -99,6 +99,15 @@ public class SoutenanceController {
         return ResponseEntity.noContent().build();
     }
 
+    @PutMapping("/{id}/planifier")
+    @Operation(summary = "Affecter une salle et un créneau à une soutenance (appelé par service-planification)")
+    public ResponseEntity<SoutenanceDTO> planifier(
+            @PathVariable String id,
+            @RequestParam String salleId,
+            @RequestParam String creneauId) {
+        return ResponseEntity.ok(soutenanceService.planifier(id, salleId, creneauId));
+    }
+
     @DeleteMapping("/{id}/planification")
     @Operation(summary = "Supprimer la planification (salle + créneau) d'une soutenance")
     public ResponseEntity<SoutenanceDTO> supprimerPlanification(@PathVariable String id) {

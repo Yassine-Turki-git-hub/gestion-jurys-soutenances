@@ -19,10 +19,12 @@ import java.util.List;
 @Component
 public class JwtAuthFilter implements GatewayFilter {
 
-    // Endpoints qui ne nécessitent pas de token
+    // Paths that don't require a JWT token
     private static final List<String> PUBLIC_PATHS = List.of(
-            "/api/utilisateurs/auth/login",
-            "/api/utilisateurs/auth/register"
+            "/api/enseignants/login",
+            "/api/enseignants/register",
+            "/api/etudiants/login",
+            "/api/etudiants/register"
     );
 
     @Value("${jwt.secret}")
@@ -30,36 +32,27 @@ public class JwtAuthFilter implements GatewayFilter {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-
         String path = exchange.getRequest().getURI().getPath();
 
-        // Laisser passer les routes publiques sans vérification
         if (isPublicPath(path)) {
             return chain.filter(exchange);
         }
 
-        // Vérifier la présence du header Authorization
         if (!exchange.getRequest().getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
             return unauthorized(exchange, "Header Authorization manquant");
         }
 
-        String authHeader = exchange.getRequest()
-                .getHeaders()
-                .getFirst(HttpHeaders.AUTHORIZATION);
+        String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
 
-        // Le header doit commencer par "Bearer "
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return unauthorized(exchange, "Format du token invalide");
         }
 
-        String token = authHeader.substring(7); // retirer "Bearer "
+        String token = authHeader.substring(7);
 
         try {
-            // Valider et décoder le token JWT
             Claims claims = validateToken(token);
 
-            // Ajouter les infos utilisateur dans les headers
-            // pour que les services en aval puissent les utiliser
             ServerWebExchange modifiedExchange = exchange.mutate()
                     .request(r -> r
                             .header("X-User-Id", claims.getSubject())
@@ -94,4 +87,3 @@ public class JwtAuthFilter implements GatewayFilter {
         return exchange.getResponse().setComplete();
     }
 }
-

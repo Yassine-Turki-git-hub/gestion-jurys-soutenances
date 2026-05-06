@@ -9,4 +9,7 @@ public interface UtilisateurClient {
 
     @GetMapping("/api/enseignants/{id}")
     EnseignantClientDTO getEnseignantById(@PathVariable("id") String id);
+
+    @GetMapping("/api/enseignants")
+    java.util.List<EnseignantClientDTO> getAllEnseignants();
 }

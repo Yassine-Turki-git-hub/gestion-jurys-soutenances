@@ -1,4 +1,5 @@
 package tn.microservices.apigateway.config;
+
 import lombok.RequiredArgsConstructor;
 import tn.microservices.apigateway.filter.JwtAuthFilter;
 import org.springframework.cloud.gateway.route.RouteLocator;
@@ -16,35 +17,45 @@ public class GatewayConfig {
     public RouteLocator routes(RouteLocatorBuilder builder) {
         return builder.routes()
 
-                // Service Utilisateurs
+                // Public auth endpoints — NO JWT filter
+                .route("auth-public", r -> r
+                        .path(
+                            "/api/enseignants/login",
+                            "/api/enseignants/register",
+                            "/api/etudiants/login",
+                            "/api/etudiants/register"
+                        )
+                        .uri("http://localhost:8081"))
+
+                // Protected utilisateurs endpoints
                 .route("service-utilisateurs", r -> r
                         .path("/api/utilisateurs/**", "/api/enseignants/**", "/api/etudiants/**")
                         .filters(f -> f.filter(jwtAuthFilter))
-                        .uri("${UTILISATEURS_SERVICE_URL:http://localhost:8081}"))
+                        .uri("http://localhost:8081"))
 
                 // Service Soutenance
                 .route("service-soutenance", r -> r
                         .path("/api/soutenances/**")
                         .filters(f -> f.filter(jwtAuthFilter))
-                        .uri("${SOUTENANCE_SERVICE_URL:http://localhost:8082}"))
+                        .uri("http://localhost:8082"))
 
                 // Service Planification
                 .route("service-planification", r -> r
-                        .path("/api/salles/**", "/api/creneaux/**")
+                        .path("/api/salles/**", "/api/creneaux/**", "/api/planification/**")
                         .filters(f -> f.filter(jwtAuthFilter))
-                        .uri("${PLANIFICATION_SERVICE_URL:http://localhost:8083}"))
+                        .uri("http://localhost:8083"))
 
                 // Service Jury
                 .route("service-jury", r -> r
                         .path("/api/jury/**", "/api/notes/**")
                         .filters(f -> f.filter(jwtAuthFilter))
-                        .uri("${JURY_SERVICE_URL:http://localhost:8084}"))
+                        .uri("http://localhost:8084"))
 
                 // Service Résultats
                 .route("service-resultats", r -> r
                         .path("/api/resultats/**")
                         .filters(f -> f.filter(jwtAuthFilter))
-                        .uri("${RESULTATS_SERVICE_URL:http://localhost:8085}"))
+                        .uri("http://localhost:8085"))
 
                 .build();
     }

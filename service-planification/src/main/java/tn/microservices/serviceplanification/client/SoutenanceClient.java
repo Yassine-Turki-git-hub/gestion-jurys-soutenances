@@ -2,15 +2,13 @@ package tn.microservices.serviceplanification.client;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
-import tn.microservices.serviceplanification.config.FeignConfig;
 import tn.microservices.serviceplanification.dto.SoutenanceDTO;
 
 import java.util.List;
 
 @FeignClient(
-        name = "api-gateway",
-        url = "${services.gateway.url}",
-        configuration = FeignConfig.class
+        name = "service-soutenance",
+        url = "${services.soutenance.url}"
 )
 public interface SoutenanceClient {
 
@@ -18,10 +16,10 @@ public interface SoutenanceClient {
     List<SoutenanceDTO> getAll();
 
     @PutMapping("/api/soutenances/{id}/planifier")
-    void affecter(@PathVariable Long id,
-                  @RequestParam Long salleId,
-                  @RequestParam Long creneauId);
+    void affecter(@PathVariable String id,
+                  @RequestParam String salleId,
+                  @RequestParam String creneauId);
 
     @DeleteMapping("/api/soutenances/{id}/planification")
-    void supprimerPlanification(@PathVariable Long id);
+    void supprimerPlanification(@PathVariable String id);
 }

@@ -22,4 +22,7 @@ public class Enseignant {
     private String password;
     private String grade;
     private String departement;
+
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private Boolean isAdmin = false;
 }

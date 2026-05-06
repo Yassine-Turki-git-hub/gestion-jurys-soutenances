@@ -15,11 +15,8 @@ public class PlanificationController {
 
     private final PlanificationService planificationService;
 
-    /**
-     * MANUAL PLANNING
-     */
     @PostMapping("/manuel")
-    public ResponseEntity<String> planifierManuel(@RequestParam Long soutenanceId,
+    public ResponseEntity<String> planifierManuel(@RequestParam String soutenanceId,
                                                   @RequestParam Long salleId,
                                                   @RequestParam Long creneauId) {
         planificationService.planifierManuel(soutenanceId, salleId, creneauId);
@@ -29,23 +26,14 @@ public class PlanificationController {
         );
     }
 
-    /**
-     * AUTOMATIC PLANNING
-     */
     @PostMapping("/auto")
-    public ResponseEntity<String> planifierAuto() {
-        planificationService.planifierAuto();
-        return new ResponseEntity<>(
-                "Planification automatique terminée avec succès",
-                HttpStatus.OK
-        );
+    public ResponseEntity<PlanificationService.AutoPlanificationResult> planifierAuto() {
+        PlanificationService.AutoPlanificationResult result = planificationService.planifierAuto();
+        return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
-    /**
-     * MODIFY PLANNING
-     */
     @PutMapping("/modifier")
-    public ResponseEntity<String> modifierPlanification(@RequestParam Long soutenanceId,
+    public ResponseEntity<String> modifierPlanification(@RequestParam String soutenanceId,
                                                         @RequestParam(required = false) Long newSalleId,
                                                         @RequestParam(required = false) Long newCreneauId) {
         planificationService.modifierPlanification(soutenanceId, newSalleId, newCreneauId);
@@ -55,25 +43,23 @@ public class PlanificationController {
         );
     }
 
-    /**
-     * DELETE PLANNING (NEW)
-     */
     @DeleteMapping("/{soutenanceId}")
-    public ResponseEntity<Void> supprimerPlanification(@PathVariable Long soutenanceId) {
+    public ResponseEntity<Void> supprimerPlanification(@PathVariable String soutenanceId) {
         planificationService.supprimerPlanification(soutenanceId);
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * BATCH PLANNING (NEW)
-     */
     @PostMapping("/lot")
     public ResponseEntity<PlanificationService.BatchPlanificationResult> planifierLot(
-            @RequestBody List<Long> soutenanceIds) {
-
+            @RequestBody List<String> soutenanceIds) {
         PlanificationService.BatchPlanificationResult result =
                 planificationService.planifierLot(soutenanceIds);
-
         return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    @PostMapping("/pour-soutenance/{soutenanceId}")
+    public ResponseEntity<PlanificationService.SoutenancePlanResult> planifierSoutenance(
+            @PathVariable String soutenanceId) {
+        return ResponseEntity.ok(planificationService.planifierSoutenance(soutenanceId));
     }
 }

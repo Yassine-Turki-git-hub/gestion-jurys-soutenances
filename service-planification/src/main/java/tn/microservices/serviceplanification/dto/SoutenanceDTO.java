@@ -7,10 +7,10 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SoutenanceDTO {
-    private Long id;
-    private Long etudiantId;
-    private Long encadrantId;
-    private List<Long> juryIds;
-    private Long salleId;
-    private Long creneauId;
+    private String id;
+    private String etudiantId;
+    private String encadrantId;
+    private List<String> juryIds;
+    private String salleId;
+    private String creneauId;
 }

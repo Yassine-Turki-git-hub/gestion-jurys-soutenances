@@ -12,13 +12,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ConflitService {
 
-    /**
-     * Verify if there is a conflict for a given Soutenance
-     * Checks for:
-     * 1. Encadrant time conflict - same encadrant in same time slot
-     * 2. Jury member conflict - same jury member in same time slot
-     * 3. Room conflict - same room in same time slot
-     */
     public boolean verifierConflit(SoutenanceDTO soutenance,
                                    List<SoutenanceDTO> allSoutenances,
                                    Long salleId,
@@ -28,36 +21,28 @@ public class ConflitService {
             return false;
         }
 
+        String salleIdStr = salleId.toString();
+        String creneauIdStr = creneauId.toString();
+
         for (SoutenanceDTO other : allSoutenances) {
-            // Skip if other soutenance has no planning yet
             if (other.getCreneauId() == null || other.getSalleId() == null) {
                 continue;
             }
-
-            // Skip if it's the same soutenance
             if (other.getId().equals(soutenance.getId())) {
                 continue;
             }
-
-            // Check if same time slot
-            if (!other.getCreneauId().equals(creneauId)) {
+            if (!other.getCreneauId().equals(creneauIdStr)) {
                 continue;
             }
-
-            // Check room conflict
-            if (other.getSalleId().equals(salleId)) {
+            if (other.getSalleId().equals(salleIdStr)) {
                 return true;
             }
-
-            // Check encadrant conflict
             if (other.getEncadrantId() != null && other.getEncadrantId().equals(soutenance.getEncadrantId())) {
                 return true;
             }
-
-            // Check jury member conflict
             if (soutenance.getJuryIds() != null && !soutenance.getJuryIds().isEmpty()) {
                 if (other.getJuryIds() != null && !other.getJuryIds().isEmpty()) {
-                    for (Long juryId : soutenance.getJuryIds()) {
+                    for (String juryId : soutenance.getJuryIds()) {
                         if (other.getJuryIds().contains(juryId)) {
                             return true;
                         }
@@ -65,14 +50,9 @@ public class ConflitService {
                 }
             }
         }
-
         return false;
     }
 
-    /**
-     * Detailed conflict detection with specific conflict type
-     * Changed signature to accept Salle and Creneau entities instead of IDs
-     */
     public ConflitInfo detecterConflitDetaille(SoutenanceDTO soutenance,
                                                Salle salle,
                                                Creneau creneau,
@@ -82,33 +62,28 @@ public class ConflitService {
             return ConflitInfo.AUCUN;
         }
 
-        Long salleId = salle.getId();
-        Long creneauId = creneau.getId();
+        String salleIdStr = salle.getId().toString();
+        String creneauIdStr = creneau.getId().toString();
 
         for (SoutenanceDTO other : allSoutenances) {
             if (other.getCreneauId() == null || other.getSalleId() == null) {
                 continue;
             }
-
             if (other.getId().equals(soutenance.getId())) {
                 continue;
             }
-
-            if (!other.getCreneauId().equals(creneauId)) {
+            if (!other.getCreneauId().equals(creneauIdStr)) {
                 continue;
             }
-
-            if (other.getSalleId().equals(salleId)) {
+            if (other.getSalleId().equals(salleIdStr)) {
                 return new ConflitInfo(true, "Conflit de salle : la salle est déjà réservée pour ce créneau");
             }
-
             if (other.getEncadrantId() != null && other.getEncadrantId().equals(soutenance.getEncadrantId())) {
                 return new ConflitInfo(true, "Conflit d'encadrant : l'encadrant est déjà occupé à ce créneau");
             }
-
             if (soutenance.getJuryIds() != null && !soutenance.getJuryIds().isEmpty()) {
                 if (other.getJuryIds() != null && !other.getJuryIds().isEmpty()) {
-                    for (Long juryId : soutenance.getJuryIds()) {
+                    for (String juryId : soutenance.getJuryIds()) {
                         if (other.getJuryIds().contains(juryId)) {
                             return new ConflitInfo(true, "Conflit de jury : un membre du jury est déjà occupé à ce créneau");
                         }
@@ -116,7 +91,6 @@ public class ConflitService {
                 }
             }
         }
-
         return ConflitInfo.AUCUN;
     }
 

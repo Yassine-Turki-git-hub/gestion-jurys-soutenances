@@ -192,6 +192,15 @@ public class SoutenanceService {
     }
 
     @Transactional
+    public SoutenanceDTO planifier(String id, String salleId, String creneauId) {
+        Soutenance s = findOrThrow(id);
+        s.setSalleId(salleId);
+        s.setCreneauId(creneauId);
+        s.setStatut(StatutSoutenance.PLANIFIEE);
+        return toDto(soutenanceRepository.save(s));
+    }
+
+    @Transactional
     public SoutenanceDTO supprimerPlanification(String id) {
         SoutenanceDTO soutenance = getById(id);
 

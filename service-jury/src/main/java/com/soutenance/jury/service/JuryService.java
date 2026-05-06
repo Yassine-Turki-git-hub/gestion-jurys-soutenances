@@ -1,13 +1,16 @@
 package com.soutenance.jury.service;
 
+import com.soutenance.jury.client.EnseignantClientDTO;
 import com.soutenance.jury.client.UtilisateurClient;
 import com.soutenance.jury.dto.JuryDTO;
 import com.soutenance.jury.entity.MembreJury;
+import com.soutenance.jury.entity.enums.RoleJury;
 import com.soutenance.jury.repository.MembreJuryRepository;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -42,6 +45,10 @@ public class JuryService {
         return toResponse(membreJuryRepository.save(membre));
     }
 
+    public List<JuryDTO.Response> getAllMembres() {
+        return membreJuryRepository.findAll().stream().map(this::toResponse).toList();
+    }
+
     public List<JuryDTO.Response> getMembresParSoutenance(String soutenanceId) {
         return membreJuryRepository.findBySoutenanceId(soutenanceId)
                 .stream().map(this::toResponse).toList();
@@ -52,6 +59,35 @@ public class JuryService {
             throw new RuntimeException("Membre jury introuvable : " + id);
         }
         membreJuryRepository.deleteById(id);
+    }
+
+    public List<JuryDTO.Response> autoAffecterJury(String soutenanceId, String encadrantId) {
+        if (membreJuryRepository.countBySoutenanceId(soutenanceId) > 0) {
+            throw new IllegalArgumentException("Cette soutenance a déjà des membres de jury assignés");
+        }
+
+        List<EnseignantClientDTO> tous = utilisateurClient.getAllEnseignants();
+        List<EnseignantClientDTO> disponibles = tous.stream()
+                .filter(e -> !e.getId().toString().equals(encadrantId))
+                .toList();
+
+        if (disponibles.size() < 3) {
+            throw new IllegalStateException("Pas assez d'enseignants disponibles pour former un jury (minimum 3 hors encadrant)");
+        }
+
+        List<RoleJury> roles = List.of(RoleJury.PRESIDENT, RoleJury.RAPPORTEUR, RoleJury.EXAMINATEUR);
+        List<JuryDTO.Response> result = new ArrayList<>();
+
+        for (int i = 0; i < 3; i++) {
+            JuryDTO.Request req = new JuryDTO.Request(
+                    disponibles.get(i).getId().toString(),
+                    soutenanceId,
+                    roles.get(i)
+            );
+            result.add(affecterMembre(req));
+        }
+
+        return result;
     }
 
     private JuryDTO.Response toResponse(MembreJury m) {

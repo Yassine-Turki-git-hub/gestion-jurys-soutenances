@@ -1,13 +1,15 @@
 package com.soutenance.service_utilisateurs.controller;
 
+import com.soutenance.service_utilisateurs.dto.LoginResponse;
 import com.soutenance.service_utilisateurs.entity.Enseignant;
 import com.soutenance.service_utilisateurs.repository.EnseignantRepository;
+import com.soutenance.service_utilisateurs.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*; 
-import com.soutenance.service_utilisateurs.dto.LoginRequest;
-import com.soutenance.service_utilisateurs.dto.RegisterRequest;
+import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
+
 @RestController
 @RequestMapping("/api/enseignants")
 public class EnseignantController {
@@ -15,13 +17,16 @@ public class EnseignantController {
     @Autowired
     private EnseignantRepository enseignantRepository;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
     @GetMapping
     public List<Enseignant> getAllEnseignants() {
         return enseignantRepository.findAll();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Enseignant> getEnseignantById(@PathVariable Long id) { // Modifié en Long
+    public ResponseEntity<Enseignant> getEnseignantById(@PathVariable Long id) {
         return enseignantRepository.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -31,7 +36,7 @@ public class EnseignantController {
     public ResponseEntity<Boolean> exists(@PathVariable Long id) {
         return ResponseEntity.ok(enseignantRepository.existsById(id));
     }
-    
+
     @PostMapping
     public Enseignant saveEnseignant(@RequestBody Enseignant enseignant) {
         return enseignantRepository.save(enseignant);
@@ -39,26 +44,26 @@ public class EnseignantController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Enseignant enseignant) {
-        // Optionnel : Vérifier si l'email existe déjà au lieu de l'ID
-        if(enseignantRepository.findByEmail(enseignant.getEmail()).isPresent()) {
+        if (enseignantRepository.findByEmail(enseignant.getEmail()).isPresent()) {
             return ResponseEntity.badRequest().body("Email déjà utilisé");
         }
-        return ResponseEntity.ok(enseignantRepository.save(enseignant));
+        Enseignant saved = enseignantRepository.save(enseignant);
+        String token = jwtUtil.generateToken(saved.getId(), saved.getEmail(), "ENSEIGNANT");
+        return ResponseEntity.ok(new LoginResponse(token, saved.getId(), saved.getNom(), saved.getPrenom(), saved.getEmail(), "ENSEIGNANT"));
     }
 
-@PostMapping("/login")
-public ResponseEntity<?> login(@RequestBody Enseignant request) {
-    // 1. Chercher l'enseignant par son email
-    return enseignantRepository.findByEmail(request.getEmail())
-        .map(enseignant -> {
-            // 2. Vérifier si le mot de passe correspond
-            if (enseignant.getPassword().equals(request.getPassword())) {
-                return ResponseEntity.ok("Connexion réussie pour " + enseignant.getNom());
-            } else {
-                return ResponseEntity.status(401).body("Mot de passe incorrect");
-            }
-        })
-        // 3. Si l'email n'existe pas
-        .orElse(ResponseEntity.status(401).body("Identifiants incorrects"));
-}
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody Enseignant request) {
+        return enseignantRepository.findByEmail(request.getEmail())
+                .map(enseignant -> {
+                    if (enseignant.getPassword().equals(request.getPassword())) {
+                        String role = Boolean.TRUE.equals(enseignant.getIsAdmin()) ? "ADMIN" : "ENSEIGNANT";
+                        String token = jwtUtil.generateToken(enseignant.getId(), enseignant.getEmail(), role);
+                        return ResponseEntity.ok((Object) new LoginResponse(token, enseignant.getId(), enseignant.getNom(), enseignant.getPrenom(), enseignant.getEmail(), role));
+                    } else {
+                        return ResponseEntity.status(401).body((Object) "Mot de passe incorrect");
+                    }
+                })
+                .orElse(ResponseEntity.status(401).body("Identifiants incorrects"));
+    }
 }

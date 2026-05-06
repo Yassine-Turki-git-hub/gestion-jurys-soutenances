@@ -39,6 +39,10 @@ public class ResultatService {
         return resultatRepository.save(resultat);
     }
 
+    public List<ResultatDTO> getAll() {
+        return resultatRepository.findAll().stream().map(this::toDto).toList();
+    }
+
     public Optional<ResultatDTO> getBySoutenanceId(String soutenanceId) {
         return resultatRepository.findBySoutenanceId(soutenanceId)
                 .map(this::toDto);
