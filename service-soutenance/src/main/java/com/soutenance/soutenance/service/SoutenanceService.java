@@ -191,6 +191,20 @@ public class SoutenanceService {
         }
     }
 
+    @Transactional
+    public SoutenanceDTO supprimerPlanification(String id) {
+        SoutenanceDTO soutenance = getById(id);
+
+        if (soutenance.getSalleId() == null && soutenance.getCreneauId() == null) {
+            throw new RuntimeException("La soutenance n'est pas planifiée");
+        }
+
+        soutenance.setSalleId(null);
+        soutenance.setCreneauId(null);
+
+        return modifier(id, soutenance);
+    }
+
     // ── HELPERS ───────────────────────────────────────────────────────────────
 
     private Soutenance findOrThrow(String id) {

@@ -98,4 +98,10 @@ public class SoutenanceController {
         soutenanceService.supprimer(id);
         return ResponseEntity.noContent().build();
     }
+
+    @DeleteMapping("/{id}/planification")
+    @Operation(summary = "Supprimer la planification (salle + créneau) d'une soutenance")
+    public ResponseEntity<SoutenanceDTO> supprimerPlanification(@PathVariable String id) {
+        return ResponseEntity.ok(soutenanceService.supprimerPlanification(id));
+    }
 }

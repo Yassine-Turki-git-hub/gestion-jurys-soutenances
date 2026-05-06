@@ -228,16 +228,19 @@ public class PlanificationService {
     // ============================================
     public void supprimerPlanification(Long soutenanceId) {
         List<SoutenanceDTO> toutesLesSoutenances = soutenanceClient.getAll();
+
         SoutenanceDTO soutenance = toutesLesSoutenances.stream()
                 .filter(s -> s.getId().equals(soutenanceId))
                 .findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException("Soutenance non trouvée: " + soutenanceId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Soutenance non trouvée: " + soutenanceId));
 
         if (soutenance.getSalleId() == null || soutenance.getCreneauId() == null) {
-            throw new ConflitPlanificationException("La soutenance n'est pas planifiée");
+            throw new ConflitPlanificationException(
+                    "La soutenance n'est pas planifiée");
         }
 
-        // Delete planning via API Gateway
+        // Call external service
         soutenanceClient.supprimerPlanification(soutenanceId);
     }
 
