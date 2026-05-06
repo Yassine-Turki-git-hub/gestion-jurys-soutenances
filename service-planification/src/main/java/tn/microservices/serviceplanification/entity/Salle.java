@@ -3,7 +3,7 @@ package tn.microservices.serviceplanification.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-@Entity
+@Entity (name="salles")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

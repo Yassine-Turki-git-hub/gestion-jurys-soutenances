@@ -6,7 +6,7 @@ import lombok.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
-@Entity
+@Entity (name="creneaux")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
