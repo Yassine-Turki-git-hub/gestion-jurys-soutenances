@@ -2,12 +2,12 @@ package tn.microservices.serviceplanification.dto;
 
 import lombok.*;
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 @Data @NoArgsConstructor @AllArgsConstructor
 public class CreneauDTO {
-    private String id;
+    private Long id;
     private LocalDate date;
-    private String heureDebut;
-    private String heureFin;
-    private Boolean estLibre;
+    private LocalTime heureDebut;
+    private LocalTime heureFin;
 }
