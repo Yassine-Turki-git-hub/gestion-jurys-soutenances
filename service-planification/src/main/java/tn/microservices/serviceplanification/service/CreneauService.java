@@ -73,8 +73,7 @@ public class CreneauService {
                 creneau.getId(),
                 creneau.getDate(),
                 creneau.getHeureDebut(),
-                creneau.getHeureFin(),
-                true // Par défaut, un créneau est libre
+                creneau.getHeureFin()
         );
     }
 }

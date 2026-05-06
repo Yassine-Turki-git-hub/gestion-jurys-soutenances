@@ -42,9 +42,9 @@ public class PlanificationService {
                 .orElseThrow(() -> new ResourceNotFoundException("Soutenance non trouvée: " + soutenanceId));
 
         // Check for conflicts
-        String conflit = conflitService.detecterConflitDetaille(soutenance, salle, creneau, toutesLesSoutenances);
-        if (conflit != null) {
-            throw new ConflitPlanificationException("Conflit de planification: " + conflit);
+        ConflitService.ConflitInfo conflitInfo = conflitService.detecterConflitDetaille(soutenance, salle, creneau, toutesLesSoutenances);
+        if (conflitInfo.hasConflit()) {
+            throw new ConflitPlanificationException("Conflit de planification: " + conflitInfo.getDescription());
         }
 
         // Assign the soutenance
@@ -89,9 +89,9 @@ public class PlanificationService {
                 if (planifiee) break;
 
                 for (Creneau creneau : creneaux) {
-                    String conflit = conflitService.detecterConflitDetaille(soutenance, salle, creneau, toutesLesSoutenances);
+                    ConflitService.ConflitInfo conflitInfo = conflitService.detecterConflitDetaille(soutenance, salle, creneau, toutesLesSoutenances);
 
-                    if (conflit == null) {
+                    if (!conflitInfo.hasConflit()) {
                         try {
                             soutenanceClient.affecter(soutenanceId, salle.getId(), creneau.getId());
                             result.ajouterSucces(soutenanceId, salle.getId(), creneau.getId());
@@ -150,9 +150,9 @@ public class PlanificationService {
                 Salle salle = salles.get(salleIndex % salles.size());
                 Creneau creneau = creneaux.get(creneauIndex % creneaux.size());
 
-                String conflit = conflitService.detecterConflitDetaille(soutenance, salle, creneau, toutesLesSoutenances);
+                ConflitService.ConflitInfo conflitInfo = conflitService.detecterConflitDetaille(soutenance, salle, creneau, toutesLesSoutenances);
 
-                if (conflit == null) {
+                if (!conflitInfo.hasConflit()) {
                     try {
                         soutenanceClient.affecter(soutenance.getId(), salle.getId(), creneau.getId());
                         result.incrementerReussites();
@@ -210,13 +210,13 @@ public class PlanificationService {
         soutenance.setCreneauId(null);
 
         // Check conflicts with new slot
-        String conflit = conflitService.detecterConflitDetaille(soutenance, newSalle, newCreneau, toutesLesSoutenances);
+        ConflitService.ConflitInfo conflitInfo = conflitService.detecterConflitDetaille(soutenance, newSalle, newCreneau, toutesLesSoutenances);
 
-        if (conflit != null) {
+        if (conflitInfo.hasConflit()) {
             // Restore old values
             soutenance.setSalleId(oldSalleId);
             soutenance.setCreneauId(oldCreneauId);
-            throw new ConflitPlanificationException("Conflit détecté pour la nouvelle planification: " + conflit);
+            throw new ConflitPlanificationException("Conflit détecté pour la nouvelle planification: " + conflitInfo.getDescription());
         }
 
         // Apply the modification

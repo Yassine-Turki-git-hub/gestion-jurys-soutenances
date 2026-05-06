@@ -3,6 +3,8 @@ package tn.microservices.serviceplanification.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import tn.microservices.serviceplanification.dto.SoutenanceDTO;
+import tn.microservices.serviceplanification.entity.Creneau;
+import tn.microservices.serviceplanification.entity.Salle;
 
 import java.util.List;
 
@@ -69,15 +71,19 @@ public class ConflitService {
 
     /**
      * Detailed conflict detection with specific conflict type
+     * Changed signature to accept Salle and Creneau entities instead of IDs
      */
     public ConflitInfo detecterConflitDetaille(SoutenanceDTO soutenance,
-                                               List<SoutenanceDTO> allSoutenances,
-                                               Long salleId,
-                                               Long creneauId) {
+                                               Salle salle,
+                                               Creneau creneau,
+                                               List<SoutenanceDTO> allSoutenances) {
 
-        if (creneauId == null || salleId == null) {
+        if (creneau == null || salle == null) {
             return ConflitInfo.AUCUN;
         }
+
+        Long salleId = salle.getId();
+        Long creneauId = creneau.getId();
 
         for (SoutenanceDTO other : allSoutenances) {
             if (other.getCreneauId() == null || other.getSalleId() == null) {
@@ -127,6 +133,10 @@ public class ConflitService {
 
         public boolean hasConflit() {
             return conflitDetecte;
+        }
+
+        public String getDescription() {
+            return description;
         }
     }
 }

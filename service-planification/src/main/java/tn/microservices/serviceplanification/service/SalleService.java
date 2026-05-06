@@ -73,8 +73,7 @@ public class SalleService {
                 salle.getId(),
                 salle.getNumero(),
                 salle.getBatiment(),
-                salle.getCapacite(),
-                true // Par défaut, une salle est libre
+                salle.getCapacite()
         );
     }
 }

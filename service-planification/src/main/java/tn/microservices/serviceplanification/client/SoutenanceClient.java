@@ -21,4 +21,7 @@ public interface SoutenanceClient {
     void affecter(@PathVariable Long id,
                   @RequestParam Long salleId,
                   @RequestParam Long creneauId);
+
+    @DeleteMapping("/api/soutenances/{id}/planification")
+    void supprimerPlanification(@PathVariable Long id);
 }
