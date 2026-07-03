@@ -197,9 +197,6 @@ spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
 
 Pas de licence spécifiée. À adapter selon vos besoins.
 
-## 👤 Auteur
-
-Yassine Turki - [GitHub Profile](https://github.com/Yassine-Turki-git-hub)
 
 ## 📞 Support
 
